@@ -1,0 +1,56 @@
+name: Gitflow Check
+
+on:
+  pull_request:
+    branches: [develop, master]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  check-gitflow:
+    name: check-gitflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate source and target branches
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          echo "Destino: $BASE_BRANCH"
+          echo "Origem:  $HEAD_BRANCH"
+          echo "Labels:  $PR_LABELS"
+
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+
+          case "$BASE_BRANCH" in
+            master)
+              case "$HEAD_BRANCH" in
+                release/* | hotfix/*) ;;
+                *) fail "A branch master só aceita merges de release/* ou hotfix/* (origem: $HEAD_BRANCH)." ;;
+              esac
+              ;;
+            develop)
+              if [ "$HEAD_BRANCH" = "master" ]; then
+                if [[ ",$PR_LABELS," == *",backport,"* ]]; then
+                  echo "Backport da master para a develop: permitido."
+                  exit 0
+                fi
+                fail "PRs da master para a develop precisam da label backport."
+              fi
+              case "$HEAD_BRANCH" in
+                feature/* | bugfix/* | release/* | hotfix/*) ;;
+                *) fail "A branch develop só aceita merges de feature/*, bugfix/*, release/*, hotfix/* ou backport da master (origem: $HEAD_BRANCH)." ;;
+              esac
+              ;;
+            *)
+              fail "Branch de destino não prevista no Git Flow: $BASE_BRANCH."
+              ;;
+          esac
+
+          echo "Fluxo válido: $HEAD_BRANCH -> $BASE_BRANCH"
