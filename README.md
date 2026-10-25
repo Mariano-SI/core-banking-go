@@ -87,10 +87,57 @@ Pré-requisitos:
 
 ## Fluxo de trabalho
 
-- **Branches:** [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/). `master` é produção e `develop` é a branch de integração. O desenvolvimento acontece em `feature/*` e `bugfix/*`, as versões passam por `release/*` e as correções urgentes por `hotfix/*`.
-- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `ci`).
-- **Pull requests:** toda mudança passa por PR com os checks aprovados. Push direto em `master` e `develop` é bloqueado.
-- **Decisões:** escolhas técnicas relevantes são registradas como ADRs.
+O repositório segue o [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/). As regras são aplicadas por proteção de branches e validadas automaticamente em cada pull request.
+
+### Branches
+
+| Branch | Função | Criada a partir de | Destino |
+|---|---|---|---|
+| `master` | Produção. Cada merge corresponde a uma versão | — | — |
+| `develop` | Integração. Branch padrão do repositório | `master` | — |
+| `feature/*` | Novas funcionalidades | `develop` | `develop` |
+| `bugfix/*` | Correções durante o desenvolvimento | `develop` | `develop` |
+| `release/*` | Preparação de uma versão | `develop` | `master` |
+| `hotfix/*` | Correções urgentes em produção | `master` | `master` |
+
+Merges permitidos, validados pelo workflow `check-gitflow`:
+
+| Destino | Origens permitidas |
+|---|---|
+| `master` | `release/*`, `hotfix/*` |
+| `develop` | `feature/*`, `bugfix/*`, `release/*`, `hotfix/*` e backport da `master` (com a label `backport`) |
+
+### Proteção de branches
+
+As branches `master` e `develop` são protegidas por um ruleset:
+
+- Push direto e force push bloqueados. Toda mudança entra por pull request.
+- As branches não podem ser excluídas.
+- O status check `check-gitflow` é obrigatório.
+- Conversas abertas no pull request precisam ser resolvidas antes do merge.
+
+### Backport automático
+
+Todo push na `master` (merge de `release/*` ou `hotfix/*`) dispara o workflow `backport`, que abre um pull request da `master` para a `develop` com a label `backport`. Assim, as correções feitas em produção não se perdem na branch de integração.
+
+O pull request é criado por um GitHub App dedicado, e não pelo `GITHUB_TOKEN`. Eventos gerados pelo `GITHUB_TOKEN` não disparam outros workflows, o que deixaria o pull request de backport sem o status check obrigatório. O App tem permissões mínimas (Contents: read, Pull requests: write) e seu token é gerado a cada execução, com validade de uma hora.
+
+### Merge
+
+| Origem → destino | Estratégia |
+|---|---|
+| `feature/*`, `bugfix/*` → `develop` | Squash and merge: um commit por entrega, com o título do pull request como mensagem |
+| `release/*`, `hotfix/*` → `master` | Merge commit: preserva o histórico da versão |
+| Backport `master` → `develop` | Merge commit |
+
+### Commits e pull requests
+
+- Commits e títulos de pull request seguem o [Conventional Commits](https://www.conventionalcommits.org/) (`feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `ci`).
+- A descrição do pull request registra o que foi feito, as decisões tomadas e como testar.
+
+### Decisões
+
+Escolhas técnicas relevantes são registradas como ADRs (Architecture Decision Records).
 
 ## Licença
 
