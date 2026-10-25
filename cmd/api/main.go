@@ -12,13 +12,12 @@ import (
 	"time"
 
 	"github.com/Mariano-SI/core-banking-go/internal/adapters/rest"
+	"github.com/Mariano-SI/core-banking-go/internal/platform/config"
+	"github.com/Mariano-SI/core-banking-go/internal/platform/logger"
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	httpAddr        = ":8080"
-	shutdownTimeout = 10 * time.Second
-)
+const shutdownTimeout = 10 * time.Second
 
 func main() {
 	if err := run(); err != nil {
@@ -28,13 +27,26 @@ func main() {
 }
 
 func run() error {
-	gin.SetMode(gin.ReleaseMode)
+	cfg, err := config.Load()
+
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
+	log := logger.New(os.Stdout, cfg)
+	slog.SetDefault(log)
+
+	if cfg.IsProduction() {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	server := &http.Server{
-		Addr:              httpAddr,
+		Addr:              cfg.HTTPAddr(),
 		Handler:           rest.NewRouter(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
