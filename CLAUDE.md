@@ -81,7 +81,20 @@ Quando o usuário informar que um card está pronto para review:
 
 ## Comandos
 
-Esta seção será completada conforme os cards forem entregues (Makefile no CB-006, docker-compose no CB-005, lint no CB-007).
+Os comandos ficam no `Makefile`. `make` sem argumentos lista todos.
+
+| Comando | Uso |
+|---|---|
+| `make run` | Executa a API. Carrega o `.env` quando ele existe; sem ele, valem os padrões da aplicação |
+| `make build` | Gera o binário em `bin/` |
+| `make test` | Testes com cobertura (`coverage.out`). `make test RACE=-race` liga o detector de race (apenas no CI) |
+| `make cover` | Testes e cobertura por função |
+| `make fmt` / `make vet` / `make tidy` | Formatação, análise estática e sincronização de dependências |
+| `make clean` | Remove o binário e o arquivo de cobertura |
+
+No Windows, o `Makefile` força o `cmd.exe` como shell, para funcionar igual no PowerShell e no Git Bash.
+
+Ainda por vir: `up`, `down` e `logs` (docker-compose, CB-005) e `lint` (golangci-lint, CB-007).
 
 ## Estrutura
 
