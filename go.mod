@@ -2,7 +2,10 @@ module github.com/Mariano-SI/core-banking-go
 
 go 1.26.2
 
-require github.com/gin-gonic/gin v1.12.0
+require (
+	github.com/caarlos0/env/v11 v11.4.1
+	github.com/gin-gonic/gin v1.12.0
+)
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect

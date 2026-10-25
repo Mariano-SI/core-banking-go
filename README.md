@@ -78,12 +78,36 @@ A troca de provedor é feita por configuração. A autorização, como garantir 
 
 ## Como executar
 
-Em construção. Esta seção será atualizada conforme o ambiente local for configurado.
-
 Pré-requisitos:
 
 - [Go 1.26+](https://go.dev/dl/)
 - [Docker](https://www.docker.com/) e Docker Compose
+
+### Configuração
+
+A aplicação é configurada por variáveis de ambiente. Os valores padrão permitem executar localmente sem nenhuma configuração.
+
+| Variável | Descrição | Padrão |
+|---|---|---|
+| `APP_ENV` | Ambiente: `development` ou `production` | `development` |
+| `HTTP_PORT` | Porta do servidor HTTP | `8080` |
+| `LOG_LEVEL` | Nível mínimo de log: `debug`, `info`, `warn` ou `error` | `info` |
+
+O arquivo `.env.example` documenta todas as variáveis. Em `production`, os logs são emitidos em JSON; em `development`, em texto.
+
+### Executando a API
+
+```bash
+go run ./cmd/api
+```
+
+O health check fica disponível em `GET http://localhost:8080/health`.
+
+### Testes
+
+```bash
+go test ./...
+```
 
 ## Fluxo de trabalho
 
