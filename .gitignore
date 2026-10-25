@@ -1,2 +1,38 @@
+# Binários
 bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Binários de teste (go test -c)
+*.test
+
+# Cobertura de testes
+*.out
+coverage.*
+*.coverprofile
+
+# Workspaces locais do Go
+go.work
+go.work.sum
+
+# Variáveis de ambiente (o .env.example deve ser versionado)
 .env
+.env.*
+!.env.example
+
+# IDEs e editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Temporários e logs
+tmp/
+*.log
