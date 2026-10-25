@@ -95,19 +95,30 @@ A aplicação é configurada por variáveis de ambiente. Os valores padrão perm
 
 O arquivo `.env.example` documenta todas as variáveis. Em `production`, os logs são emitidos em JSON; em `development`, em texto.
 
+### Comandos
+
+Os comandos do dia a dia estão no `Makefile`. Execute `make` para ver a lista.
+
+| Comando | Descrição |
+|---|---|
+| `make run` | Executa a API, carregando as variáveis do `.env` quando o arquivo existe |
+| `make build` | Gera o binário em `bin/` |
+| `make test` | Executa os testes com cobertura (`make test RACE=-race` habilita o detector de race) |
+| `make cover` | Executa os testes e exibe a cobertura por função |
+| `make fmt` | Formata o código |
+| `make vet` | Executa o `go vet` |
+| `make tidy` | Sincroniza o `go.mod` e o `go.sum` com o código |
+| `make clean` | Remove o binário e o arquivo de cobertura |
+
+Para usar variáveis próprias localmente, copie o `.env.example` para `.env` e ajuste os valores. O `.env` não é versionado.
+
 ### Executando a API
 
 ```bash
-go run ./cmd/api
+make run
 ```
 
 O health check fica disponível em `GET http://localhost:8080/health`.
-
-### Testes
-
-```bash
-go test ./...
-```
 
 ## Fluxo de trabalho
 
