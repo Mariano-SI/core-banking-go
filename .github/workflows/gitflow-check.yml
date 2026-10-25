@@ -7,6 +7,11 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
+
+concurrency:
+  group: gitflow-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   check-gitflow:
@@ -15,10 +20,16 @@ jobs:
     steps:
       - name: Validate source and target branches
         env:
-          BASE_BRANCH: ${{ github.base_ref }}
-          HEAD_BRANCH: ${{ github.head_ref }}
-          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          # Lê o estado ATUAL do PR, e não a foto do evento, que pode estar desatualizada
+          pr=$(gh pr view "$PR_NUMBER" --json baseRefName,headRefName,labels)
+          BASE_BRANCH=$(echo "$pr" | jq -r '.baseRefName')
+          HEAD_BRANCH=$(echo "$pr" | jq -r '.headRefName')
+          PR_LABELS=$(echo "$pr" | jq -r '[.labels[].name] | join(",")')
+
           echo "Destino: $BASE_BRANCH"
           echo "Origem:  $HEAD_BRANCH"
           echo "Labels:  $PR_LABELS"
