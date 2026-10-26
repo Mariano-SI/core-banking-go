@@ -77,7 +77,9 @@ Quando o usuário informar que um card está pronto para review:
 - Sistema: Windows, com PowerShell e Git Bash
 - Go 1.26
 - O detector de race (`-race`) exige cgo e não funciona localmente; ele roda no CI (Linux)
-- O Git converte quebras de linha para CRLF no checkout (`core.autocrlf`). O repositório deve usar LF (`.gitattributes`, previsto no CB-007)
+- O `.gitattributes` força LF no repositório e na cópia local, e o `.editorconfig` define LF, quebra de linha final e indentação (tab em Go e no Makefile)
+- Lint: golangci-lint v2 (`.golangci.yml`) com o conjunto `standard` mais `bodyclose`, `errorlint`, `gosec`, `misspell`, `noctx`, `revive` e `unconvert`. As regras de comentários de documentação estão desligadas (preset `comments`): comentários são escritos apenas quando explicam algo não óbvio
+- Imports em três grupos: biblioteca padrão, externos e pacotes do próprio módulo (`goimports` com `local-prefixes`)
 
 ## Comandos
 
@@ -95,7 +97,7 @@ Os comandos ficam no `Makefile`. `make` sem argumentos lista todos.
 
 No Windows, o `Makefile` força o `cmd.exe` como shell, para funcionar igual no PowerShell e no Git Bash.
 
-Ainda por vir: `lint` (golangci-lint, CB-007).
+`make lint` executa o golangci-lint com as regras do `.golangci.yml`; `golangci-lint fmt` corrige formatação e imports.
 
 O `docker compose` e o `make run` leem o mesmo `.env`. As variáveis `POSTGRES_*` e `KEYCLOAK_*` configuram os containers, não a API; a API passará a ter `DATABASE_URL` (Sprint 01) e as variáveis de OIDC (Sprint 02).
 

@@ -82,6 +82,8 @@ Pré-requisitos:
 
 - [Go 1.26+](https://go.dev/dl/)
 - [Docker](https://www.docker.com/) e Docker Compose
+- `make`
+- [golangci-lint](https://golangci-lint.run/) v2, para executar o linter localmente
 
 ### Configuração
 
@@ -130,6 +132,7 @@ Os comandos do dia a dia estão no `Makefile`. Execute `make` para ver a lista.
 | `make up` | Sobe as dependências locais (PostgreSQL e Keycloak) |
 | `make down` | Para as dependências locais, mantendo os dados |
 | `make logs` | Acompanha os logs das dependências locais |
+| `make lint` | Executa os linters (golangci-lint), conforme o `.golangci.yml` |
 
 Para usar variáveis próprias localmente, copie o `.env.example` para `.env` e ajuste os valores. O `.env` não é versionado.
 
