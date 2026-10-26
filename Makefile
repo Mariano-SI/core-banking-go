@@ -41,7 +41,7 @@ help:
 	$(info up       Start the local dependencies (PostgreSQL and Keycloak))
 	$(info down     Stop the local dependencies (data is kept))
 	$(info logs     Follow the logs of the local dependencies)
-  $(info lint     Run the linters (golangci-lint))
+	$(info lint     Run the linters (golangci-lint))
 
 run:
 	go run ./cmd/api
