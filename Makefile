@@ -24,7 +24,7 @@ CLEAN_CMD := rm -rf $(BINARY_DIR) $(COVER_FILE)
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help run build test cover fmt vet tidy clean up down logs
+.PHONY: help run build test cover fmt vet tidy clean up down logs lint
 
 help:
 	$(info Usage: make <target>)
@@ -41,6 +41,7 @@ help:
 	$(info up       Start the local dependencies (PostgreSQL and Keycloak))
 	$(info down     Stop the local dependencies (data is kept))
 	$(info logs     Follow the logs of the local dependencies)
+	$(info lint     Run the linters (golangci-lint))
 
 run:
 	go run ./cmd/api
@@ -74,3 +75,6 @@ down:
 
 logs:
 	docker compose logs -f
+
+lint:
+	golangci-lint run ./...

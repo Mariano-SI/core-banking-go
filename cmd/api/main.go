@@ -14,6 +14,7 @@ import (
 	"github.com/Mariano-SI/core-banking-go/internal/adapters/rest"
 	"github.com/Mariano-SI/core-banking-go/internal/platform/config"
 	"github.com/Mariano-SI/core-banking-go/internal/platform/logger"
+
 	"github.com/gin-gonic/gin"
 )
 
