@@ -91,10 +91,13 @@ Os comandos ficam no `Makefile`. `make` sem argumentos lista todos.
 | `make cover` | Testes e cobertura por função |
 | `make fmt` / `make vet` / `make tidy` | Formatação, análise estática e sincronização de dependências |
 | `make clean` | Remove o binário e o arquivo de cobertura |
+| `make up` / `make down` / `make logs` | Sobe, para (mantendo os dados) e acompanha os logs do PostgreSQL (`localhost:5432`) e do Keycloak (`http://localhost:8081`) via docker-compose |
 
 No Windows, o `Makefile` força o `cmd.exe` como shell, para funcionar igual no PowerShell e no Git Bash.
 
-Ainda por vir: `up`, `down` e `logs` (docker-compose, CB-005) e `lint` (golangci-lint, CB-007).
+Ainda por vir: `lint` (golangci-lint, CB-007).
+
+O `docker compose` e o `make run` leem o mesmo `.env`. As variáveis `POSTGRES_*` e `KEYCLOAK_*` configuram os containers, não a API; a API passará a ter `DATABASE_URL` (Sprint 01) e as variáveis de OIDC (Sprint 02).
 
 ## Estrutura
 

@@ -95,6 +95,24 @@ A aplicação é configurada por variáveis de ambiente. Os valores padrão perm
 
 O arquivo `.env.example` documenta todas as variáveis. Em `production`, os logs são emitidos em JSON; em `development`, em texto.
 
+### Ambiente local
+
+As dependências da API rodam em containers definidos no `docker-compose.yml`:
+
+| Serviço | Endereço | Uso |
+|---|---|---|
+| PostgreSQL 17 | `localhost:5432` | Banco de dados da aplicação |
+| Keycloak 26 | `http://localhost:8081` | Provedor de identidade (console de administração) |
+
+As credenciais vêm do `.env`. As senhas não têm valor padrão: sem elas, o `docker compose` não sobe.
+
+```bash
+cp .env.example .env
+make up
+```
+
+Os dados do PostgreSQL ficam em um volume e são mantidos entre reinicializações. Para apagar os dados e recomeçar do zero, use `docker compose down -v`.
+
 ### Comandos
 
 Os comandos do dia a dia estão no `Makefile`. Execute `make` para ver a lista.
@@ -109,6 +127,9 @@ Os comandos do dia a dia estão no `Makefile`. Execute `make` para ver a lista.
 | `make vet` | Executa o `go vet` |
 | `make tidy` | Sincroniza o `go.mod` e o `go.sum` com o código |
 | `make clean` | Remove o binário e o arquivo de cobertura |
+| `make up` | Sobe as dependências locais (PostgreSQL e Keycloak) |
+| `make down` | Para as dependências locais, mantendo os dados |
+| `make logs` | Acompanha os logs das dependências locais |
 
 Para usar variáveis próprias localmente, copie o `.env.example` para `.env` e ajuste os valores. O `.env` não é versionado.
 
