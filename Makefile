@@ -24,7 +24,7 @@ CLEAN_CMD := rm -rf $(BINARY_DIR) $(COVER_FILE)
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help run build test cover fmt vet tidy clean
+.PHONY: help run build test cover fmt vet tidy clean up down logs
 
 help:
 	$(info Usage: make <target>)
@@ -38,6 +38,9 @@ help:
 	$(info vet      Run go vet)
 	$(info tidy     Sync go.mod and go.sum with the code)
 	$(info clean    Remove the binary and the coverage file)
+	$(info up       Start the local dependencies (PostgreSQL and Keycloak))
+	$(info down     Stop the local dependencies (data is kept))
+	$(info logs     Follow the logs of the local dependencies)
 
 run:
 	go run ./cmd/api
@@ -62,3 +65,12 @@ tidy:
 
 clean:
 	@$(CLEAN_CMD)
+
+up:
+	docker compose up -d
+
+down:
+	docker compose down
+
+logs:
+	docker compose logs -f
