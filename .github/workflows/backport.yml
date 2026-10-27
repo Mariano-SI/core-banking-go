@@ -1,0 +1,51 @@
+name: Backport
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backport
+  cancel-in-progress: false
+
+jobs:
+  open-backport-pr:
+    name: open-backport-pr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.BACKPORT_APP_ID }}
+          private-key: ${{ secrets.BACKPORT_APP_PRIVATE_KEY }}
+          permission-contents: read
+          permission-pull-requests: write
+
+      - name: Open pull request from master to develop
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          existing=$(gh pr list --base develop --head master --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            echo "Já existe um PR de backport aberto: #$existing"
+            exit 0
+          fi
+
+          ahead=$(gh api "repos/$GH_REPO/compare/develop...master" --jq '.ahead_by')
+          if [ "$ahead" = "0" ]; then
+            echo "A develop já contém todos os commits da master. Nada a fazer."
+            exit 0
+          fi
+
+          gh pr create \
+            --base develop \
+            --head master \
+            --title "chore: backport master into develop" \
+            --body "Sincroniza a develop com a master após o commit ${COMMIT_SHA}." \
+            --label backport

@@ -5,6 +5,7 @@ API de core bancário escrita em Go, com ledger de partidas dobradas, transferê
 ![Status](https://img.shields.io/badge/status-em%20constru%C3%A7%C3%A3o-orange)
 ![Go](https://img.shields.io/badge/go-1.26-00ADD8?logo=go)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+![CI](https://github.com/Mariano-SI/core-banking-go/actions/workflows/ci.yml/badge.svg?branch=develop)
 
 ## Sobre
 
@@ -78,19 +79,125 @@ A troca de provedor é feita por configuração. A autorização, como garantir 
 
 ## Como executar
 
-Em construção. Esta seção será atualizada conforme o ambiente local for configurado.
-
 Pré-requisitos:
 
 - [Go 1.26+](https://go.dev/dl/)
 - [Docker](https://www.docker.com/) e Docker Compose
+- `make`
+- [golangci-lint](https://golangci-lint.run/) v2, para executar o linter localmente
+
+### Configuração
+
+A aplicação é configurada por variáveis de ambiente. Os valores padrão permitem executar localmente sem nenhuma configuração.
+
+| Variável | Descrição | Padrão |
+|---|---|---|
+| `APP_ENV` | Ambiente: `development` ou `production` | `development` |
+| `HTTP_PORT` | Porta do servidor HTTP | `8080` |
+| `LOG_LEVEL` | Nível mínimo de log: `debug`, `info`, `warn` ou `error` | `info` |
+
+O arquivo `.env.example` documenta todas as variáveis. Em `production`, os logs são emitidos em JSON; em `development`, em texto.
+
+### Ambiente local
+
+As dependências da API rodam em containers definidos no `docker-compose.yml`:
+
+| Serviço | Endereço | Uso |
+|---|---|---|
+| PostgreSQL 17 | `localhost:5432` | Banco de dados da aplicação |
+| Keycloak 26 | `http://localhost:8081` | Provedor de identidade (console de administração) |
+
+As credenciais vêm do `.env`. As senhas não têm valor padrão: sem elas, o `docker compose` não sobe.
+
+```bash
+cp .env.example .env
+make up
+```
+
+Os dados do PostgreSQL ficam em um volume e são mantidos entre reinicializações. Para apagar os dados e recomeçar do zero, use `docker compose down -v`.
+
+### Comandos
+
+Os comandos do dia a dia estão no `Makefile`. Execute `make` para ver a lista.
+
+| Comando | Descrição |
+|---|---|
+| `make run` | Executa a API, carregando as variáveis do `.env` quando o arquivo existe |
+| `make build` | Gera o binário em `bin/` |
+| `make test` | Executa os testes com cobertura (`make test RACE=-race` habilita o detector de race) |
+| `make cover` | Executa os testes e exibe a cobertura por função |
+| `make fmt` | Formata o código |
+| `make vet` | Executa o `go vet` |
+| `make tidy` | Sincroniza o `go.mod` e o `go.sum` com o código |
+| `make clean` | Remove o binário e o arquivo de cobertura |
+| `make up` | Sobe as dependências locais (PostgreSQL e Keycloak) |
+| `make down` | Para as dependências locais, mantendo os dados |
+| `make logs` | Acompanha os logs das dependências locais |
+| `make lint` | Executa os linters (golangci-lint), conforme o `.golangci.yml` |
+
+Para usar variáveis próprias localmente, copie o `.env.example` para `.env` e ajuste os valores. O `.env` não é versionado.
+
+### Executando a API
+
+```bash
+make run
+```
+
+O health check fica disponível em `GET http://localhost:8080/health`.
 
 ## Fluxo de trabalho
 
-- **Branches:** [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/). `master` é produção e `develop` é a branch de integração. O desenvolvimento acontece em `feature/*` e `bugfix/*`, as versões passam por `release/*` e as correções urgentes por `hotfix/*`.
-- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `ci`).
-- **Pull requests:** toda mudança passa por PR com os checks aprovados. Push direto em `master` e `develop` é bloqueado.
-- **Decisões:** escolhas técnicas relevantes são registradas como ADRs.
+O repositório segue o [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/). As regras são aplicadas por proteção de branches e validadas automaticamente em cada pull request.
+
+### Branches
+
+| Branch | Função | Criada a partir de | Destino |
+|---|---|---|---|
+| `master` | Produção. Cada merge corresponde a uma versão | — | — |
+| `develop` | Integração. Branch padrão do repositório | `master` | — |
+| `feature/*` | Novas funcionalidades | `develop` | `develop` |
+| `bugfix/*` | Correções durante o desenvolvimento | `develop` | `develop` |
+| `release/*` | Preparação de uma versão | `develop` | `master` |
+| `hotfix/*` | Correções urgentes em produção | `master` | `master` |
+
+Merges permitidos, validados pelo workflow `check-gitflow`:
+
+| Destino | Origens permitidas |
+|---|---|
+| `master` | `release/*`, `hotfix/*` |
+| `develop` | `feature/*`, `bugfix/*`, `release/*`, `hotfix/*` e backport da `master` (com a label `backport`) |
+
+### Proteção de branches
+
+As branches `master` e `develop` são protegidas por um ruleset:
+
+- Push direto e force push bloqueados. Toda mudança entra por pull request.
+- As branches não podem ser excluídas.
+- O status check `check-gitflow` é obrigatório.
+- Conversas abertas no pull request precisam ser resolvidas antes do merge.
+
+### Backport automático
+
+Todo push na `master` (merge de `release/*` ou `hotfix/*`) dispara o workflow `backport`, que abre um pull request da `master` para a `develop` com a label `backport`. Assim, as correções feitas em produção não se perdem na branch de integração.
+
+O pull request é criado por um GitHub App dedicado, e não pelo `GITHUB_TOKEN`. Eventos gerados pelo `GITHUB_TOKEN` não disparam outros workflows, o que deixaria o pull request de backport sem o status check obrigatório. O App tem permissões mínimas (Contents: read, Pull requests: write) e seu token é gerado a cada execução, com validade de uma hora.
+
+### Merge
+
+| Origem → destino | Estratégia |
+|---|---|
+| `feature/*`, `bugfix/*` → `develop` | Squash and merge: um commit por entrega, com o título do pull request como mensagem |
+| `release/*`, `hotfix/*` → `master` | Merge commit: preserva o histórico da versão |
+| Backport `master` → `develop` | Merge commit |
+
+### Commits e pull requests
+
+- Commits e títulos de pull request seguem o [Conventional Commits](https://www.conventionalcommits.org/) (`feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `ci`).
+- A descrição do pull request registra o que foi feito, as decisões tomadas e como testar.
+
+### Decisões
+
+Escolhas técnicas relevantes são registradas como ADRs (Architecture Decision Records).
 
 ## Licença
 
