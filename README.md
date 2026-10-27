@@ -5,6 +5,7 @@ API de core bancário escrita em Go, com ledger de partidas dobradas, transferê
 ![Status](https://img.shields.io/badge/status-em%20constru%C3%A7%C3%A3o-orange)
 ![Go](https://img.shields.io/badge/go-1.26-00ADD8?logo=go)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+![CI](https://github.com/Mariano-SI/core-banking-go/actions/workflows/ci.yml/badge.svg?branch=develop)
 
 ## Sobre
 
