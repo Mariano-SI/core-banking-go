@@ -17,9 +17,10 @@ const (
 )
 
 type Config struct {
-	Env      Environment `env:"APP_ENV" envDefault:"development"`
-	HTTPPort int         `env:"HTTP_PORT"  envDefault:"8080"`
-	LogLevel slog.Level  `env:"LOG_LEVEL"  envDefault:"info"`
+	Env         Environment `env:"APP_ENV" envDefault:"development"`
+	HTTPPort    int         `env:"HTTP_PORT"  envDefault:"8080"`
+	LogLevel    slog.Level  `env:"LOG_LEVEL"  envDefault:"info"`
+	DatabaseURL string      `env:"DATABASE_URL"`
 }
 
 func Load() (Config, error) {
@@ -53,7 +54,11 @@ func (c Config) validate() error {
 	}
 
 	if c.HTTPPort < 1 || c.HTTPPort > 65535 {
-		errs = append(errs, fmt.Errorf("HTTP_PORT must be between 1 and 65535, got %q", c.Env))
+		errs = append(errs, fmt.Errorf("HTTP_PORT must be between 1 and 65535, got %d", c.HTTPPort))
+	}
+
+	if c.DatabaseURL == "" {
+		errs = append(errs, errors.New("DATABASE_URL cannot be empty"))
 	}
 
 	return errors.Join(errs...)
