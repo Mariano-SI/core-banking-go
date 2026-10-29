@@ -13,6 +13,7 @@ import (
 
 	"github.com/Mariano-SI/core-banking-go/internal/adapters/rest"
 	"github.com/Mariano-SI/core-banking-go/internal/platform/config"
+	"github.com/Mariano-SI/core-banking-go/internal/platform/database"
 	"github.com/Mariano-SI/core-banking-go/internal/platform/logger"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,17 @@ func run() error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	db, err := database.Open(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("connect to database: %w", err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			slog.Error("close database", "error", err)
+		}
+		slog.Info("database connection closed")
+	}()
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr(),
