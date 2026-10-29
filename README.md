@@ -85,6 +85,7 @@ Pré-requisitos:
 - [Docker](https://www.docker.com/) e Docker Compose
 - `make`
 - [golangci-lint](https://golangci-lint.run/) v2, para executar o linter localmente
+- [goose](https://pressly.github.io/goose/), para as migrations do banco, instalado com `make tools`
 
 ### Configuração
 
@@ -95,6 +96,7 @@ A aplicação é configurada por variáveis de ambiente. Os valores padrão perm
 | `APP_ENV` | Ambiente: `development` ou `production` | `development` |
 | `HTTP_PORT` | Porta do servidor HTTP | `8080` |
 | `LOG_LEVEL` | Nível mínimo de log: `debug`, `info`, `warn` ou `error` | `info` |
+| `DATABASE_URL` | String de conexão com o PostgreSQL, usada pelas migrations | — |
 
 O arquivo `.env.example` documenta todas as variáveis. Em `production`, os logs são emitidos em JSON; em `development`, em texto.
 
@@ -134,8 +136,31 @@ Os comandos do dia a dia estão no `Makefile`. Execute `make` para ver a lista.
 | `make down` | Para as dependências locais, mantendo os dados |
 | `make logs` | Acompanha os logs das dependências locais |
 | `make lint` | Executa os linters (golangci-lint), conforme o `.golangci.yml` |
+| `make tools` | Instala as ferramentas de desenvolvimento (goose) |
+| `make migrate-up` | Aplica as migrations pendentes |
+| `make migrate-down` | Desfaz a última migration aplicada |
+| `make migrate-status` | Mostra quais migrations foram aplicadas |
+| `make migrate-create name=<nome>` | Cria uma nova migration em `migrations/` |
 
 Para usar variáveis próprias localmente, copie o `.env.example` para `.env` e ajuste os valores. O `.env` não é versionado.
+
+### Migrations
+
+O esquema do banco é versionado em `migrations/` com o [goose](https://pressly.github.io/goose/). Cada arquivo SQL tem a migration (`-- +goose Up`) e a reversão (`-- +goose Down`), numerados em sequência. O goose registra as migrations aplicadas na tabela `goose_db_version`.
+
+```bash
+make tools        # instala o goose (uma vez)
+make up           # sobe o PostgreSQL
+make migrate-up   # aplica as migrations pendentes
+```
+
+O esquema inicial cria as tabelas `branches`, `customers` e `accounts`, a sequence `account_number_seq` e as agências `0001` (Agência Central) e `0002` (Agência Digital).
+
+Regras:
+
+- Migrations já mergeadas **não são editadas**. Correções e alterações são feitas em uma migration nova.
+- Toda migration tem um `Down` funcional. Antes do PR, valide o ciclo completo: `make migrate-up`, `make migrate-down` até o início e `make migrate-up` novamente.
+- Em produção, as migrations rodam como etapa separada do deploy, e não na inicialização da API.
 
 ### Executando a API
 
